@@ -18,7 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<User, "name" | "email">>) => Promise<void>;
+  updateProfile: (updates: Partial<Pick<User, "name" | "email">>) => Promise<{ ok: boolean; error?: string }>;
   deleteAccount: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ ok: boolean; error?: string }>;
 }
@@ -108,9 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (updates.email) updateData.email = updates.email;
 
     const { data, error } = await supabase.auth.updateUser(updateData);
-    if (!error && data.user) {
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+    if (data.user) {
       setUser(mapSupabaseUser(data.user));
     }
+    return { ok: true };
   }, []);
 
   const deleteAccount = useCallback(async () => {

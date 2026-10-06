@@ -13,11 +13,17 @@ interface ApiKey {
 
 function generateKey() {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "sk_test_";
-  for (let i = 0; i < 32; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return "sk_test_" + Array.from(array, (b) => chars[b % chars.length]).join("");
+}
+
+async function hashKey(key: string): Promise<string> {
+  const encoded = new TextEncoder().encode(key);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export default function ApiKeysPage() {
@@ -51,11 +57,12 @@ export default function ApiKeysPage() {
     const name = newKeyName.trim() || "Default";
     const fullKey = generateKey();
     const keyPrefix = fullKey.substring(0, 12);
+    const hashed = await hashKey(fullKey);
 
     const { error } = await supabase.from("api_keys").insert({
       user_id: user.id,
       name,
-      key_hash: fullKey, // In production, hash this with SHA-256
+      key_hash: hashed,
       key_prefix: keyPrefix,
     });
 

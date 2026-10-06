@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState(user?.email || "");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -22,8 +23,13 @@ export default function SettingsPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await updateProfile({ name: name.trim(), email: email.trim() });
+    setError("");
+    const result = await updateProfile({ name: name.trim(), email: email.trim() });
     setSaving(false);
+    if (!result.ok) {
+      setError(result.error || "Failed to update profile");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -70,6 +76,11 @@ export default function SettingsPage() {
             />
             <p className="text-xs text-zinc-600 mt-1">Changing email requires re-verification.</p>
           </div>
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
           <button
             type="submit"
             disabled={saving}
