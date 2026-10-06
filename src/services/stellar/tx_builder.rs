@@ -75,8 +75,19 @@ pub fn build_asset(code: &str, issuer: &str) -> Result<Asset, AppError> {
 
 /// Convert a human-readable amount (e.g., 10.50) to stroops (Stellar's smallest unit).
 /// 1 XLM/USDC = 10,000,000 stroops
-pub fn to_stroops(amount: f64) -> i64 {
-    (amount * 10_000_000.0) as i64
+pub fn to_stroops(amount: f64) -> Result<i64, AppError> {
+    if !amount.is_finite() || amount < 0.0 {
+        return Err(AppError::InvalidInput(format!(
+            "Invalid amount for stroops conversion: {amount}"
+        )));
+    }
+    let stroops = amount * 10_000_000.0;
+    if stroops > i64::MAX as f64 {
+        return Err(AppError::InvalidInput(format!(
+            "Amount too large for stroops: {amount}"
+        )));
+    }
+    Ok(stroops as i64)
 }
 
 /// Build a complete Transaction with the given operations.

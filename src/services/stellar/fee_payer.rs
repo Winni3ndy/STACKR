@@ -24,7 +24,7 @@ pub async fn fund_new_account(
     let fee_payer = load_fee_payer_key(ctx)?;
 
     // 2.5 XLM covers: 1 XLM base reserve + 0.5 XLM × 2 trustlines + buffer for fees
-    let starting_balance_stroops = tx_builder::to_stroops(2.5);
+    let starting_balance_stroops = tx_builder::to_stroops(2.5)?;
 
     let create_op = tx_builder::op_create_account(destination_key, starting_balance_stroops)?;
 
@@ -57,7 +57,7 @@ pub async fn send_from_fee_payer(
     let usdc = tx_builder::build_asset(&ctx.operator.usdc_asset_code, &ctx.operator.usdc_issuer)?;
 
     let payment_op =
-        tx_builder::op_payment(destination_key, usdc, tx_builder::to_stroops(usdc_amount))?;
+        tx_builder::op_payment(destination_key, usdc, tx_builder::to_stroops(usdc_amount)?)?;
 
     let tx_hash = tx_builder::build_sign_submit(
         ctx,

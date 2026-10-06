@@ -47,7 +47,7 @@ pub async fn ensure_trustline(
     let asset = tx_builder::build_asset(asset_code, asset_issuer)?;
 
     // Max trustline limit (effectively unlimited)
-    let max_limit = tx_builder::to_stroops(922337203685.4775); // i64::MAX / 10_000_000
+    let max_limit = tx_builder::to_stroops(922337203685.4775)?; // i64::MAX / 10_000_000
 
     // Build ChangeTrust operation
     let trust_op = tx_builder::op_change_trust(asset, max_limit)?;

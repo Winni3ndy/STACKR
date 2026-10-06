@@ -71,10 +71,10 @@ pub async fn swap(
     // Build path payment operation
     let path_op = tx_builder::op_path_payment_strict_send(
         source_asset,
-        tx_builder::to_stroops(send_amount),
+        tx_builder::to_stroops(send_amount)?,
         &public_key, // Send to self (swap)
         dest_asset,
-        tx_builder::to_stroops(dest_min),
+        tx_builder::to_stroops(dest_min)?,
         intermediate_path,
     )?;
 

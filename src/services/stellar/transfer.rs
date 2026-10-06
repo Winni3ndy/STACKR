@@ -36,7 +36,7 @@ pub async fn send_usdc(
     let usdc = tx_builder::build_asset(&ctx.operator.usdc_asset_code, &ctx.operator.usdc_issuer)?;
 
     // Build payment operation
-    let payment_op = tx_builder::op_payment(destination_key, usdc, tx_builder::to_stroops(amount))?;
+    let payment_op = tx_builder::op_payment(destination_key, usdc, tx_builder::to_stroops(amount)?)?;
 
     // Build, sign, and submit in one call
     let tx_hash = tx_builder::build_sign_submit(
@@ -83,7 +83,7 @@ pub async fn send_xlm(
     let payment_op = tx_builder::op_payment(
         destination_key,
         stellar_xdr::curr::Asset::Native,
-        tx_builder::to_stroops(amount),
+        tx_builder::to_stroops(amount)?,
     )?;
 
     let tx_hash =
