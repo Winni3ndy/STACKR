@@ -1,0 +1,31 @@
+[Unit]
+Description=Stackr - USSD Stablecoin API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/stackr
+Environment="RUST_LOG=info"
+EnvironmentFile=/opt/stackr/.env
+ExecStart=/opt/stackr/target/release/stackr
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/stackr/stackr.log
+StandardError=append:/var/log/stackr/stackr.error.log
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/stackr /var/log/stackr
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

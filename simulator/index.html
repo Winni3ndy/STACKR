@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stackr USSD Simulator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+    padding: 10px;
+  }
+
+  .container {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    html, body {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      padding: 0;
+      align-items: flex-start;
+      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .controls {
+      display: none;
+    }
+  }
+
+  /* ─── Phone Frame ─── */
+  .phone {
+    width: 375px;
+    height: 740px;
+    background: #1a1a1a;
+    border-radius: 48px;
+    border: 3px solid #333;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  /* Mobile: Full screen phone */
+  @media (max-width: 768px) {
+    .phone {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+      padding: 20px 16px;
+      box-shadow: none;
+    }
+
+    .phone-notch {
+      display: none;
+    }
+  }
+
+  .phone-notch {
+    width: 140px;
+    height: 28px;
+    background: #0a0a0a;
+    border-radius: 0 0 18px 18px;
+    margin: 0 auto 8px;
+  }
+
+  .phone-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px 8px;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .phone-status-bar .time { font-weight: 600; color: #fff; }
+
+  /* ─── USSD Dialog ─── */
+  .ussd-overlay {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .ussd-dialog {
+    width: 100%;
+    background: #1e1e1e;
+    border-radius: 16px;
+    border: 1px solid #333;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .ussd-header {
+    background: #2a2a2a;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #aaa;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ussd-header .service-code {
+    font-weight: 700;
+    color: #22c55e;
+    font-size: 14px;
+  }
+
+  .ussd-body {
+    padding: 20px 16px;
+    min-height: 200px;
+    max-height: 340px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #e5e5e5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* Mobile: Shorter body to leave room for keyboard */
+  @media (max-width: 768px) {
+    .ussd-body {
+      padding: 16px;
+      min-height: auto;
+      padding-bottom: 80px;
+    }
+  }
+
+  .ussd-body.ended {
+    color: #f59e0b;
+  }
+
+  .ussd-input-area {
+    border-top: 1px solid #333;
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Mobile: Fixed input at bottom */
+  @media (max-width: 768px) {
+    .ussd-dialog {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .ussd-body {
+      flex: 1;
+      max-height: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ussd-input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e1e1e;
+      z-index: 1000;
+      padding: 16px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+      border-top: 2px solid #444;
+    }
+
+    .ussd-input-area input {
+      font-size: 16px;
+      padding: 14px;
+      min-height: 48px;
+      background: #2a2a2a;
+    }
+
+    .ussd-input-area button {
+      font-size: 16px;
+      padding: 14px 24px;
+      min-height: 48px;
+      min-width: 80px;
+      white-space: nowrap;
+    }
+  }
+
+  .ussd-input-area input {
+    flex: 1;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .ussd-input-area input:focus {
+    border-color: #22c55e;
+  }
+
+  .ussd-input-area input::placeholder {
+    color: #666;
+  }
+
+  .ussd-input-area button {
+    background: #22c55e;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .ussd-input-area button:hover { background: #16a34a; }
+  .ussd-input-area button:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+  .ussd-input-area.hidden { display: none; }
+
+  /* ─── Session Ended Overlay ─── */
+  .session-ended {
+    border-top: 1px solid #333;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .session-ended button {
+    background: #22c55e;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+  }
+
+  .session-ended button:hover { background: #16a34a; }
+
+  /* ─── Loading ─── */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-size: 14px;
+    padding: 8px 0;
+  }
+
+  .loading .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #333;
+    border-top-color: #22c55e;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Side Panel ─── */
+  .panel {
+    width: 380px;
+  }
+
+  .panel h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .panel h2 span { color: #22c55e; }
+
+  .panel .subtitle {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .config-section {
+    margin-bottom: 20px;
+  }
+
+  .config-section label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .config-section input, .config-section select {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .config-section input:focus, .config-section select:focus {
+    border-color: #22c55e;
+  }
+
+  .log-section {
+    margin-top: 24px;
+  }
+
+  .log-section h3 {
+    font-size: 13px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .log-entries {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .log-entry {
+    color: #666;
+    border-bottom: 1px solid #1a1a1a;
+    padding: 4px 0;
+  }
+
+  .log-entry .arrow { color: #22c55e; }
+  .log-entry .arrow.response { color: #f59e0b; }
+  .log-entry .text { color: #ccc; }
+  .log-entry .meta { color: #555; font-size: 10px; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 860px) {
+    .container { flex-direction: column; align-items: center; gap: 32px; }
+    .panel { width: 375px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Phone -->
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-status-bar">
+      <span class="time" id="clock">12:00</span>
+      <span>Stackr USSD</span>
+      <span>100%</span>
+    </div>
+
+    <div class="ussd-overlay">
+      <div class="ussd-dialog">
+        <div class="ussd-header">
+          <span class="service-code">*384#</span>
+          <span id="session-status">New Session</span>
+        </div>
+
+        <div class="ussd-body" id="ussd-body">
+          Press "Dial" to start a USSD session.
+        </div>
+
+        <!-- Initial state: Dial button -->
+        <div class="session-ended" id="dial-area">
+          <button onclick="startSession()">Dial *384#</button>
+        </div>
+
+        <!-- Active session: Input -->
+        <div class="ussd-input-area hidden" id="input-area">
+          <input type="text" id="ussd-input" placeholder="Enter response..."
+                 onkeydown="if(event.key==='Enter') sendInput()" autofocus>
+          <button onclick="sendInput()" id="send-btn">Send</button>
+        </div>
+
+        <!-- Session ended: New session button -->
+        <div class="session-ended hidden" id="ended-area">
+          <button onclick="startSession()">New Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Panel -->
+  <div class="panel">
+    <h2>Stackr <span>Standard</span></h2>
+    <p class="subtitle">USSD Simulator &mdash; test flows locally</p>
+
+    <div class="config-section">
+      <label>Server URL</label>
+      <input type="text" id="server-url" value="">
+    </div>
+    <script>
+      // Auto-detect server URL based on how page is accessed
+      window.addEventListener('DOMContentLoaded', function() {
+        const hostname = window.location.hostname;
+        let serverUrl;
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+          serverUrl = 'http://localhost:3003';
+        } else {
+          serverUrl = 'http://' + hostname + ':3003';
+        }
+        document.getElementById('server-url').value = serverUrl;
+      });
+    </script>
+
+    <div class="config-section">
+      <label>Phone Number</label>
+      <input type="text" id="phone-number" value="+250781234567">
+    </div>
+
+    <div class="config-section">
+      <label>Service Code</label>
+      <input type="text" id="service-code" value="*384#">
+    </div>
+
+    <div class="log-section">
+      <h3>Session Log</h3>
+      <div class="log-entries" id="log-entries">
+        <div class="log-entry">
+          <span class="meta">Ready. Start a session to see requests.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let sessionId = '';
+  let cumulativeText = '';
+  let stepCount = 0;
+
+  // Update clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  function generateSessionId() {
+    return 'sim-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+  }
+
+  function log(direction, text, meta) {
+    const entries = document.getElementById('log-entries');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    const arrow = direction === 'send' ? '&rarr;' : '&larr;';
+    const arrowClass = direction === 'send' ? 'arrow' : 'arrow response';
+    entry.innerHTML = `<span class="${arrowClass}">${arrow}</span> <span class="text">${escapeHtml(text)}</span><br><span class="meta">${meta}</span>`;
+    entries.appendChild(entry);
+    entries.scrollTop = entries.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function showArea(areaId) {
+    ['dial-area', 'input-area', 'ended-area'].forEach(id => {
+      document.getElementById(id).classList.toggle('hidden', id !== areaId);
+    });
+  }
+
+  async function sendUssd(text) {
+    const serverUrl = document.getElementById('server-url').value;
+    const phoneNumber = document.getElementById('phone-number').value;
+    const serviceCode = document.getElementById('service-code').value;
+
+    const body = new URLSearchParams({
+      sessionId: sessionId,
+      phoneNumber: phoneNumber,
+      serviceCode: serviceCode,
+      text: text
+    });
+
+    const ussdBody = document.getElementById('ussd-body');
+    ussdBody.innerHTML = '<div class="loading"><div class="spinner"></div> Processing...</div>';
+
+    log('send', `text="${text}"`, `session=${sessionId.substr(0, 16)}... step=${stepCount}`);
+
+    try {
+      const response = await fetch(`${serverUrl}/ussd/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+
+      const responseText = await response.text();
+      const isContinue = responseText.startsWith('CON ');
+      const isEnd = responseText.startsWith('END ');
+      const displayText = responseText.replace(/^(CON |END )/, '');
+
+      ussdBody.textContent = displayText;
+      ussdBody.className = isEnd ? 'ussd-body ended' : 'ussd-body';
+
+      const statusEl = document.getElementById('session-status');
+
+      if (isEnd) {
+        statusEl.textContent = 'Session Ended';
+        showArea('ended-area');
+        log('recv', displayText.substring(0, 80) + (displayText.length > 80 ? '...' : ''), 'END — session terminated');
+      } else {
+        statusEl.textContent = `Step ${stepCount}`;
+        showArea('input-area');
+        document.getElementById('ussd-input').value = '';
+        document.getElementById('ussd-input').focus();
+        log('recv', displayText.substring(0, 80) + (displayText.length > 80 ? '...' : ''), 'CON — awaiting input');
+      }
+    } catch (err) {
+      ussdBody.textContent = 'Connection failed.\n\nMake sure the server is running:\ncargo run';
+      ussdBody.className = 'ussd-body ended';
+      showArea('ended-area');
+      log('error', err.message, 'Connection failed');
+    }
+  }
+
+  function startSession() {
+    sessionId = generateSessionId();
+    cumulativeText = '';
+    stepCount = 0;
+
+    document.getElementById('session-status').textContent = 'Connecting...';
+
+    // Clear log
+    document.getElementById('log-entries').innerHTML = '';
+    log('info', `New session: ${sessionId}`, new Date().toLocaleTimeString());
+
+    sendUssd('');
+  }
+
+  function sendInput() {
+    const input = document.getElementById('ussd-input').value.trim();
+    if (input === '') return;
+
+    stepCount++;
+
+    // Build cumulative text (Africa's Talking protocol)
+    if (cumulativeText === '') {
+      cumulativeText = input;
+    } else {
+      cumulativeText += '*' + input;
+    }
+
+    sendUssd(cumulativeText);
+  }
+
+  // Mobile keyboard fix: Scroll input into view when focused
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.phone');
+    const ussdBody = document.querySelector('.ussd-body');
+
+    // When any input is focused, scroll it into view
+    document.addEventListener('focusin', function(e) {
+      if (e.target.tagName === 'INPUT') {
+        setTimeout(function() {
+          // Scroll the input into view
+          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Also scroll the USSD body to bottom to show input area
+          if (ussdBody) {
+            ussdBody.scrollTop = ussdBody.scrollHeight;
+          }
+        }, 300); // Small delay for keyboard to appear
+      }
+    });
+
+    // Prevent body scroll when input is focused
+    document.addEventListener('touchmove', function(e) {
+      if (document.activeElement.tagName === 'INPUT') {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stackr Mobile Money - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 375px;
+            height: 667px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #2d3748;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .app-header .balance {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .app-header .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            background: #f7fafc;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .menu-item:active {
+            transform: scale(0.95);
+        }
+
+        .menu-item .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .menu-item .label {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: #48bb78;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-message {
+            background: #f56565;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-icon {
+            font-size: 30px;
+        }
+
+        .transaction-details {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-card p {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .wallet-address {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            word-break: break-all;
+            margin-top: 10px;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>📶 🔋</span>
+        </div>
+
+        <div class="app-header">
+            <h1>💰 Stackr</h1>
+            <div class="balance-label">Your Balance</div>
+            <div class="balance" id="balance">--</div>
+            <div style="font-size: 12px; opacity: 0.8;" id="phone-display"></div>
+        </div>
+
+        <div class="content">
+            <!-- Login Screen -->
+            <div class="screen active" id="screen-login">
+                <div class="info-card">
+                    <h3>Welcome to Stackr</h3>
+                    <p>Enter your phone number and PIN to get started. Use the test accounts below or create a new one.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="login-phone" placeholder="+250781111111" value="+250781111111">
+                </div>
+
+                <div class="form-group">
+                    <label>PIN</label>
+                    <input type="password" id="login-pin" placeholder="4-digit PIN" value="1234" maxlength="4">
+                </div>
+
+                <button class="btn" onclick="login()">Login</button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-register')">Create New Account</button>
+
+                <div style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 10px; font-size: 12px; color: #718096;">
+                    <strong>Test Accounts:</strong><br>
+                    • +250781111111 (PIN: 1234)<br>
+                    • +250782222222 (PIN: 5678)<br>
+                    • +250783333333 (PIN: 9999)
+                </div>
+            </div>
+
+            <!-- Register Screen -->
+            <div class="screen" id="screen-register">
+                <div class="info-card">
+                    <h3>Create Account</h3>
+                    <p>Choose a phone number and a 4-digit PIN. You'll get a free wallet on the Stellar network.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="register-phone" placeholder="+250784444444">
+                </div>
+
+                <div class="form-group">
+                    <label>Choose a PIN</label>
+                    <input type="password" id="register-pin" placeholder="4-digit PIN" maxlength="4">
+                </div>
+
+                <button class="btn" onclick="register()">Create Account</button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-login')">Back to Login</button>
+            </div>
+
+            <!-- Main Menu -->
+            <div class="screen" id="screen-main">
+                <div class="menu-grid">
+                    <div class="menu-item" onclick="showScreen('screen-send')">
+                        <div class="icon">💸</div>
+                        <div class="label">Send Money</div>
+                    </div>
+                    <div class="menu-item" onclick="showScreen('screen-airtime')">
+                        <div class="icon">📱</div>
+                        <div class="label">Buy Airtime</div>
+                    </div>
+                    <div class="menu-item" onclick="showScreen('screen-deposit')">
+                        <div class="icon">💵</div>
+                        <div class="label">Deposit</div>
+                    </div>
+                    <div class="menu-item" onclick="showScreen('screen-withdraw')">
+                        <div class="icon">🏦</div>
+                        <div class="label">Withdraw</div>
+                    </div>
+                    <div class="menu-item" onclick="showScreen('screen-bills')">
+                        <div class="icon">💡</div>
+                        <div class="label">Pay Bills</div>
+                    </div>
+                    <div class="menu-item" onclick="showScreen('screen-account')">
+                        <div class="icon">👤</div>
+                        <div class="label">My Account</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Send Money Screen -->
+            <div class="screen" id="screen-send">
+                <h2 style="margin-bottom: 20px; color: #2d3748;">Send Money</h2>
+
+                <div class="form-group">
+                    <label>Recipient Phone Number</label>
+                    <input type="tel" id="send-phone" placeholder="+250782222222">
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (USDC)</label>
+                    <input type="number" id="send-amount" placeholder="10.00" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label>Your PIN</label>
+                    <input type="password" id="send-pin" placeholder="4-digit PIN" maxlength="4">
+                </div>
+
+                <button class="btn" onclick="sendMoney()">Send Money</button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Cancel</button>
+            </div>
+
+            <!-- Buy Airtime Screen -->
+            <div class="screen" id="screen-airtime">
+                <h2 style="margin-bottom: 20px; color: #2d3748;">Buy Airtime</h2>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="airtime-phone" placeholder="Phone number">
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (RWF)</label>
+                    <input type="number" id="airtime-amount" placeholder="1000" step="100">
+                </div>
+
+                <button class="btn" onclick="buyAirtime()">Buy Airtime</button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Cancel</button>
+            </div>
+
+            <!-- Deposit Screen -->
+            <div class="screen" id="screen-deposit">
+                <div class="info-card">
+                    <h3>Deposit Money</h3>
+                    <p>Deposit cash and get USDC in your wallet. In production, this would integrate with Mobile Money or bank transfers.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back</button>
+            </div>
+
+            <!-- Withdraw Screen -->
+            <div class="screen" id="screen-withdraw">
+                <div class="info-card">
+                    <h3>Withdraw Money</h3>
+                    <p>Convert your USDC to cash via Mobile Money or bank transfer. In production, this would connect to local payment providers.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back</button>
+            </div>
+
+            <!-- Pay Bills Screen -->
+            <div class="screen" id="screen-bills">
+                <div class="info-card">
+                    <h3>Pay Bills</h3>
+                    <p>Pay for electricity, water, internet, and other utilities. In production, this integrates with local bill payment providers.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back</button>
+            </div>
+
+            <!-- Account Screen -->
+            <div class="screen" id="screen-account">
+                <h2 style="margin-bottom: 20px; color: #2d3748;">My Account</h2>
+
+                <div class="info-card">
+                    <h3>Account Details</h3>
+                    <p><strong>Phone:</strong> <span id="account-phone">--</span></p>
+                    <p><strong>KYC Tier:</strong> <span id="account-tier">--</span></p>
+                    <p><strong>Status:</strong> <span id="account-status">--</span></p>
+                    <div class="wallet-address" id="account-wallet">--</div>
+                </div>
+
+                <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'sk_66311478d48d027e15886252b35d837ee672dcb158d62b816282b82e47793ce0';
+
+        // Auto-detect API URL based on current host
+        function getApiBase() {
+            const hostname = window.location.hostname;
+
+            // If viewing as file:// or localhost, use localhost
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+                return 'http://localhost:3003/api/v1';
+            }
+
+            // If on local network IP, use that IP for API
+            return `http://${hostname}:3003/api/v1`;
+        }
+
+        const API_BASE = getApiBase();
+
+        let currentUser = null;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMessage(message, type = 'success') {
+            const div = document.createElement('div');
+            div.className = type === 'success' ? 'success-message' : 'error-message';
+            div.textContent = message;
+
+            const screen = document.querySelector('.screen.active');
+            screen.insertBefore(div, screen.firstChild);
+
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        function showLoading() {
+            const screen = document.querySelector('.screen.active');
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.innerHTML = '<div class="spinner"></div>';
+            loading.id = 'loading-indicator';
+            screen.appendChild(loading);
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading-indicator');
+            if (loading) loading.remove();
+        }
+
+        async function login() {
+            const phone = document.getElementById('login-phone').value;
+            const pin = document.getElementById('login-pin').value;
+
+            if (!phone || !pin) {
+                showMessage('Please enter phone and PIN', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Get account info
+                const response = await fetch(`${API_BASE}/accounts/${encodeURIComponent(phone)}`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+
+                if (!response.ok) throw new Error('Account not found');
+
+                currentUser = await response.json();
+                currentUser.pin = pin;
+
+                // Get balance
+                await updateBalance();
+
+                document.getElementById('phone-display').textContent = phone;
+                showScreen('screen-main');
+                showMessage('Login successful!');
+
+            } catch (error) {
+                showMessage('Login failed. Check phone number and PIN.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function register() {
+            const phone = document.getElementById('register-phone').value;
+            const pin = document.getElementById('register-pin').value;
+
+            if (!phone || pin.length !== 4) {
+                showMessage('Please enter valid phone and 4-digit PIN', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_BASE}/accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, pin })
+                });
+
+                if (!response.ok) throw new Error('Registration failed');
+
+                const result = await response.json();
+                showMessage('Account created! Logging you in...');
+
+                setTimeout(() => {
+                    document.getElementById('login-phone').value = phone;
+                    document.getElementById('login-pin').value = pin;
+                    showScreen('screen-login');
+                }, 2000);
+
+            } catch (error) {
+                showMessage('Registration failed. Try a different phone number.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function updateBalance() {
+            try {
+                const response = await fetch(`${API_BASE}/accounts/${encodeURIComponent(currentUser.phone)}/balance`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+
+                const data = await response.json();
+                const usdcBalance = data.balances.find(b => b.asset === 'USDC')?.amount || 0;
+                document.getElementById('balance').textContent = `$${usdcBalance.toFixed(2)}`;
+
+            } catch (error) {
+                document.getElementById('balance').textContent = '--';
+            }
+        }
+
+        async function sendMoney() {
+            const recipientPhone = document.getElementById('send-phone').value;
+            const amount = parseFloat(document.getElementById('send-amount').value);
+            const pin = document.getElementById('send-pin').value;
+
+            if (!recipientPhone || !amount || !pin) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_BASE}/transfers`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender_phone: currentUser.phone,
+                        recipient_phone: recipientPhone,
+                        amount: amount,
+                        pin: pin
+                    })
+                });
+
+                if (!response.ok) throw new Error('Transfer failed');
+
+                const result = await response.json();
+                showMessage(`Successfully sent $${amount} to ${recipientPhone}!`);
+
+                await updateBalance();
+
+                setTimeout(() => {
+                    document.getElementById('send-phone').value = '';
+                    document.getElementById('send-amount').value = '';
+                    document.getElementById('send-pin').value = '';
+                    showScreen('screen-main');
+                }, 2000);
+
+            } catch (error) {
+                showMessage('Transfer failed. Check your balance and PIN.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function buyAirtime() {
+            showMessage('Airtime purchase demo - would integrate with telecom providers', 'success');
+            setTimeout(() => showScreen('screen-main'), 2000);
+        }
+
+        async function loadAccountDetails() {
+            if (!currentUser) return;
+
+            document.getElementById('account-phone').textContent = currentUser.phone;
+            document.getElementById('account-tier').textContent = `Tier ${currentUser.kyc_tier || 0}`;
+            document.getElementById('account-status').textContent = currentUser.is_active ? 'Active' : 'Inactive';
+            document.getElementById('account-wallet').textContent = currentUser.public_key;
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('balance').textContent = '--';
+            document.getElementById('phone-display').textContent = '';
+            showScreen('screen-login');
+        }
+
+        // Auto-load account details when showing account screen
+        const observer = new MutationObserver(() => {
+            if (document.getElementById('screen-account').classList.contains('active')) {
+                loadAccountDetails();
+            }
+        });
+
+        observer.observe(document.getElementById('screen-account'), { attributes: true });
+    </script>
+</body>
+</html>

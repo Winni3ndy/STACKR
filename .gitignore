@@ -1,0 +1,80 @@
+# Rust build
+/target/
+*.rlib
+*.rmeta
+
+# Environment / Secrets
+.env
+.env.local
+.env.*.local
+.env.production
+website/.env
+website/.env.local
+website/.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Superstack
+.superstack/
+
+# Logs
+*.log
+/var/
+
+# OS
+.DS_Store
+Thumbs.db
+._*
+
+# Rust incremental compilation
+*.d
+*.fingerprint
+
+# Node / Next.js
+node_modules/
+website/node_modules/
+website/.next/
+website/out/
+website/.DS_Store
+website/.turbo/
+website/next-env.d.ts
+
+# SSH keys (never commit these)
+*.key
+*.pem
+id_rsa
+id_ed25519
+
+# Archives
+*.tar.gz
+*.zip
+
+# Test files (temporary)
+test.html
+test_*.sh
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Personal docs (private)
+HOW_IT_WORKS.md
+NITA
+PRODUCTION_ROADMAP.md
+GO_LIVE_PARTNERS.md
+PRE_LAUNCH_CHECKLIST.md
+DEMO_TOMORROW.md
+WINDOWS_SETUP.md
+CLEANUP_SUMMARY.md
+DOMAIN_SETUP_GUIDE.md
+EXTERNAL_SERVICES_SETUP.md
+VPS_DEPLOYMENT_INSTRUCTIONS.md

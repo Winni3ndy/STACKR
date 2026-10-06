@@ -1,0 +1,77 @@
+[package]
+name = "stackr"
+version = "0.1.0"
+edition = "2021"
+description = "Open-standard USSD stablecoin settlement infrastructure on Stellar"
+license = "MIT"
+repository = "https://github.com/AkemiHomura-maworshi/stackr-standard"
+keywords = ["ussd", "stellar", "stablecoin", "africa", "payments"]
+categories = ["finance", "web-programming"]
+authors = ["Stackr Contributors"]
+
+[dependencies]
+# Web framework
+actix-web = "4"
+actix-rt = "2"
+actix-cors = "0.7"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Database
+deadpool-postgres = { version = "0.14", features = ["serde"] }
+tokio-postgres = { version = "0.7", features = ["with-uuid-1", "with-chrono-0_4", "with-serde_json-1"] }
+tokio-postgres-rustls = "0.12"
+postgres-types = { version = "0.2", features = ["derive"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
+webpki-roots = "0.26"
+
+# Redis
+redis = { version = "0.27", features = ["aio", "tokio-comp", "connection-manager", "tls-native-tls", "tokio-native-tls-comp"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Cryptography
+hkdf = "0.12"
+sha2 = "0.10"
+aes-gcm = "0.10"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+subtle = "2"
+argon2 = "0.5"
+rand = "0.8"
+
+# Stellar
+stellar-strkey = "0.0.10"
+stellar-xdr = { version = "21", features = ["std", "serde", "base64"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+tracing-actix-web = "0.7"
+
+# Utilities
+dotenvy = "0.15"
+uuid = { version = "1", features = ["v4", "serde"] }
+base64 = "0.22"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+url = "2"
+thiserror = "2"
+anyhow = "1"
+once_cell = "1"
+num_cpus = "1"
+
+[dev-dependencies]
+actix-test = "0.1"
+tokio-test = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
